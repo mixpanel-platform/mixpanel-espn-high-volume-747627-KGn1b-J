@@ -150,7 +150,7 @@ function displayTable(div, tableArray, event) {
 
 function addRow(tableDiv, data, header) {
   header = header ? header : '';
-  if (!data.change) { data.change = '3%'; }
+  if (!data.change) { data.change = '3'; }
   var change = header ? '' : '%';
   var color = header ? '' : ' style="color: ' + colorFormat(data.change) + ';"';
   $('<div class="row ' + header + '">' + 
