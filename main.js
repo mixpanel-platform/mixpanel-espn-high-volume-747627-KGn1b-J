@@ -160,7 +160,7 @@ function getCurrentStory() {
 function getEngagement() {
   var engagementParams = {
     'from_date': date_to_string(moment().subtract(predictedDays, 'days')),
-    'to_date': '2016-04-18',
+    'to_date': date_to_string(moment()),
   }
   return MP.api.jql(engagementScript, engagementParams);
 }
