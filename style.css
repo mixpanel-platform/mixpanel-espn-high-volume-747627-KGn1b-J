@@ -339,7 +339,11 @@ h1 {
   padding-bottom: 25px;
 }
 
-
+@media (max-width:1500px) {
+  #all-slots {
+    width: inherit;
+  }
+}
 
 
 
