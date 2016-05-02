@@ -4,12 +4,292 @@
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/css/reset.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.css">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="http://momentjs.com/downloads/moment.min.js"></script>
+    <script src="http://momentjs.com/downloads/moment-timezone.min.js"></script>
     <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script>
+    <script src="main.js"></script>
   </head>
-  <body class="mixpanel-platform-body">
-    <h1>Hello, World!</h1>
-    <script>
-      // Run queries and display results here
+  <body>
+    <div class="header">
+      <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/2/2f/ESPN_wordmark.svg">
+      <h1>Content Slot Performance</h1>
+      <div class="current-time"></div>
+    </div>
+    <div id="all-slots"></div>
+    <div id="tables">
+      <div id="top-by-view" class="table-section card">
+        <div class="chart-title">Top Slots by View</div>
+        <div class="top-table"></div>
+      </div>
+      <div id="top-by-share" class="table-section card">
+        <div class="chart-title">Top Slots by Share</div>
+        <div class="top-table"></div>
+      </div>
+    </div>
+
+    <script type="text/cq" id="engagement">
+        var timezone = 4; // utc to et offset (should be 4 for EDT, 5 for EST)
+        var now = _.now() - 1000*60*60*timezone;
+        var nowHour = new Date(now).getHours() % 12 || 12;
+        var lastHour = nowHour == 1 ? 12 : nowHour - 1;
+        var threeHoursAgo = now - 1000*60*60*3;
+        var firstEvent = now;
+        var predictedDays = dayDiff(new Date(params.from_date).getTime(), new Date(params.to_date).getTime());
+
+        function dayDiff(d1, d2) {
+            var oneDay = 1000*60*60*24;
+            return Math.round(Math.abs(d1 - d2)/oneDay);
+        }
+
+        function main() {
+            var object = {};
+            var events = {
+                'Video Started': 5,
+                'Page View': 3,
+                'Social Share': 1,
+            };
+            // Take all events in the given date range.
+            return Events({
+              from_date: params.from_date,
+              to_date: params.to_date,
+            })
+            .filter(function(event) {
+                var timeInt = new Date(event.time).getHours();
+                var threeInt = new Date(threeHoursAgo).getHours();
+                var nowInt = new Date(now).getHours();
+                if (timeInt <= timezone) timeInt += 24;
+                if (threeInt <= timezone) threeInt += 24;
+                if (nowInt <= timezone) nowInt += 24;
+                return Object.keys(events).indexOf(event.name) > -1 && event.properties.Slot && threeInt <= timeInt && timeInt <= nowInt;
+            })
+            .map(function(event) {
+                var obj = {};
+                var slot = event.properties.Slot;
+                var time = event.time;
+                var date = new Date(time);
+                var current = time >= now - 1000*60*60*24 ? 'Actual' : 'Predicted';
+                var hour = date.getHours();
+                hour = hour % 12 || 12;
+                hour += ':00';
+                obj[slot] = {};
+                if (current === 'Actual') {
+                    obj[slot]['Counts'] = {};
+                    obj[slot]['Counts'][event.name] = {};
+                    obj[slot]['Counts'][event.name][hour] = 1;
+                } else {
+                    if (time < firstEvent) firstEvent = time;
+                }
+                obj[slot]['Engagement'] = {};
+                obj[slot]['Engagement'][current] = {};
+                obj[slot]['Engagement'][current][hour] = events[event.name];
+                return obj;
+            })
+            .reduce(mixpanel.reducer.object_merge())
+            .map(function(item) {
+                _.each(item, function(slot) {
+                    _.each(slot.Engagement.Predicted, function(count, time) {
+                        var newCount = Math.round(count/predictedDays);
+                        slot.Engagement.Predicted[time] = newCount;
+                        var hourInt = parseInt(time.substr(0,1));
+                        if (hourInt == nowHour) {
+                            slot.Engagement.Predicted.now = newCount;
+                        }
+                    });
+                    _.each(slot.Engagement.Actual, function(count, time) {
+                        var hourInt = parseInt(time.substr(0,1));
+                        if (hourInt == nowHour) {
+                            slot.Engagement.Actual.now = count;
+                        }
+                    })
+                    _.each(slot.Counts, function(eventName) {
+                        var total = 0;
+                        _.each(eventName, function(count, hour) {
+                            total += count;
+                            var hourInt = parseInt(hour.substr(0,1));
+                            if (hourInt == 1) {
+                                eventName.now = count;
+                            } else if (hourInt == 12) {
+                                eventName.last = count;
+                            }
+                        });
+                        eventName.total = total;
+                    });
+                });
+                return item;
+            });
+        }
+    </script>
+    <script type="text/cq" id="basic-traffic">
+        var sources = {
+            'Social': ['facebook', 'twitter', 'linkedin', 'pinterest',],
+            'Search': ['google', 'bing', 'yahoo',],
+            'Direct': ['direct'],
+            'Internal': ['espn']
+        }
+        function readSources(domain) {
+            var types = Object.keys(sources);
+            for (var i = 0, j = types.length; i < j; i++) {
+                for (var k = 0, l = sources[types[i]].length; k < l; k++) {
+                    if (domain.indexOf(sources[types[i]][k]) > -1) {
+                        return types[i];
+                    }
+                }
+            }
+            return 'Other';
+        }
+        function getTrafficSource(event) {
+            var url = event.properties.$initial_referrer; // use referring domain
+            var split = url.split('/'); // delete
+            if (split.length >= 3) { // delete
+                url = split[2] // delete
+            } else { // del
+                return 'Direct'; // del
+            } // del
+            if (!url) { return 'Direct'; }
+            var domainList = url.split('.');
+            if (domainList.length <= 1) { return readSources(url); }
+            var domain = domainList.slice(0, domainList.length-1).join('.');
+            return readSources(domain);
+        }
+
+        function main() {
+            // Take all events in the given date range.
+            return Events({
+                from_date: params.from_date,
+                to_date: params.to_date,
+            })
+            .filter(function(event) { return event.name == 'Video Started' && event.properties.Slot && event.properties.Slot <= params.max_slots; }) // use page view event
+            .map(function(event) {
+                var obj = {};
+                var slot = event.properties.Slot;
+                obj[slot] = {};
+                var traffic = getTrafficSource(event);
+                obj[slot][traffic] = 1;
+                return obj;
+            })
+            .reduce(mixpanel.reducer.object_merge())
+        }
+    </script>
+    <script type="text/cq" id="current-story">
+        function main() {
+            // Take all events in the given date range.
+            return Events({
+                from_date: params.from_date,
+                to_date: params.to_date,
+            })
+            .filter(function(event) {
+                return event.name === 'Page View' && 
+                  event.properties['Story Headline'] && 
+                  event.properties['Referrer URL'] == 'http://espn.go.com/' &&
+                  event.properties['Referrer Placement Type'] == 'News Feed';
+            })
+            .groupBy(['properties.Story\ Headline', 'properties.Referrer\ Slot'], function(outputs, events) {
+                var ret = ret || {
+                    start: 10000000000000000,
+                    end: 0,
+                }
+                _.each(events, function(event) {
+                    if (event.time < ret.start) ret.start = event.time;
+                    if (event.time > ret.end) ret.end = event.time;
+                })
+                _.each(outputs, function(output) {
+                    if (output.start < ret.start) ret.start = output.start;
+                    if (output.end > ret.end) ret.end = output.end;
+                })
+                return ret;
+            })
+            .reduce(function(outputs, items) {
+                var obj = obj || {
+                  slots: {},
+                  stories: {}
+                };
+                _.each(items, function(item) {
+                    var story = item.key[0];
+                    var slot = item.key[1];
+                    if (obj['slots'][slot]) {
+                        var currentSlotStory = obj['slots'][slot].story;
+                        if (currentSlotStory === story) {
+                            if (item.value.start < obj['slots'][slot].start) obj['slots'][slot].start = item.value.start;
+                            if (item.value.end > obj['slots'][slot].end) obj['slots'][slot].end = item.value.end;
+                        } else {
+                            if (item.value.end > obj['slots'][slot].end) {
+                                obj['slots'][slot].story = story;
+                                obj['slots'][slot].start = item.value.start;
+                                obj['slots'][slot].end = item.value.end;
+                            }
+                        }
+                    } else {
+                        obj['slots'][slot] = {
+                            story: story,
+                            start: item.value.start,
+                            end: item.value.end
+                        }
+                    }
+                    if (obj['stories'][story]) {
+                        if (item.value.start < obj['stories'][story].start) obj['stories'][story].start = item.value.start;
+                        if (item.value.end > obj['stories'][story].end) obj['stories'][story].end = item.value.end;
+                    } else {
+                        obj['stories'][story] = {
+                            start: item.value.start,
+                            end: item.value.end
+                        }
+                    }
+                });
+                _.each(outputs, function(output) {
+                    _.each(output.slots, function(slot) {
+                        if (obj['slots'][slot]) {
+                            if (obj['slots'][slot].end < slot.end) {
+                                if (obj['slots'][slot].story === slot.story) {
+                                    obj['slots'][slot].end = slot.end;
+                                    if (obj['slots'][slot].start > slot.start) obj['slots'][slot].start = slot.start;
+                                } else {
+                                    obj['slots'][slot] = slot;
+                                }
+                            } else {
+                                if (obj['slots'][slot].story === slot.story) {
+                                    if (obj['slots'][slot].start > slot.start) obj['slots'][slot].start = slot.start;
+                                }
+                            }
+                        }
+                    });
+                    _.each(output.stories, function(story) {
+                        if (obj['stories'][story]) {
+                            if (obj['stories'][story].start > story.start) obj['stories'][story].start = story.start;
+                            if (obj['stories'][story].end < story.end) obj['stories'][story].end = story.end;
+                        }
+                    })
+                });
+                return obj;
+            })
+            .map(function(item) {
+                var ret = {};
+                for (var i = 1; i <= params.max_slots; i++) {
+                    if (item.slots[i]) {
+                        var story = item.slots[i].story;
+                        var slotTime = msToTime(item.slots[i].end - item.slots[i].start);
+                        var storyTime = msToTime(item.stories[story].end - item.stories[story].start);
+                        ret[i] = {};
+                        ret[i].story = story;
+                        ret[i].slot_time_hr = slotTime[0];
+                        ret[i].slot_time_min = slotTime[1];
+                        ret[i].story_time_hr = storyTime[0];
+                        ret[i].story_time_min = storyTime[1];
+                    }
+                }
+                return ret;
+            })
+        }
+
+        function msToTime(duration) {
+            var minutes = parseInt((duration/(1000*60))%60),
+                hours = parseInt((duration/(1000*60*60))%24);
+
+            return [hours, minutes];
+        }
     </script>
   </body>
 </html>
