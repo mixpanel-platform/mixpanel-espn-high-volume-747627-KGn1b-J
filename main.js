@@ -81,6 +81,7 @@ function generateTables(data) {
   var $byView = $('#top-by-view');
   var $byShare = $('#top-by-share');
   var top = {
+    'Page View': [],
     'Video Started': [],
     'Social Share': []
   };
