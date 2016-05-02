@@ -343,6 +343,13 @@ h1 {
   #all-slots {
     width: inherit;
   }
+  .card {
+    width: 774px;
+  }
+  .card.table-section {
+    width: initial;
+    display: inline-block;
+  }
 }
 
 
