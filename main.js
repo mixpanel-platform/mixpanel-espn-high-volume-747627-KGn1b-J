@@ -152,16 +152,16 @@ function addRow(tableDiv, data, header) {
 function getCurrentStory() {
   var storyParams = {
     'max_slots': totalSlots,
-    'from_date': date_to_string(moment().subtract(1, 'days')),
-    'to_date': date_to_string(moment()),
+    'from_date': date_to_string(_.now() - 1000*60*60*24),
+    'to_date': date_to_string(_.now()),
   }
   return MP.api.jql(storyScript, storyParams);
 }
 
 function getEngagement() {
   var engagementParams = {
-    'from_date': date_to_string(moment().subtract(predictedDays, 'days')),
-    'to_date': date_to_string(moment()),
+    'from_date': date_to_string(_.now() - 1000*60*60*24*predictedDays),
+    'to_date': date_to_string(_.now()),
   }
   return MP.api.jql(engagementScript, engagementParams);
 }
@@ -169,8 +169,8 @@ function getEngagement() {
 function getBasicTraffic() {
   var basicTrafficParams = {
     'max_slots': totalSlots,
-    'from_date': date_to_string(moment()),
-    'to_date': date_to_string(moment()),
+    'from_date': date_to_string(_.now()),
+    'to_date': date_to_string(_.now()),
   }
   return MP.api.jql(basicTrafficScript, basicTrafficParams);
 }
