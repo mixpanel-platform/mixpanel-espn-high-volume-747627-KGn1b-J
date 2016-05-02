@@ -1,0 +1,813 @@
+OLD REPORT
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/css/reset.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.css">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script>
+    <style>
+      body {
+        font-size: 13px;
+        color: #868ea3;
+        font-family: 'Open Sans';
+      }
+      .mixpanel-platform-section {
+        background-color: white;
+      }
+      hr {
+        margin: 40px auto;
+        width: 650px;
+        height: 2px;
+        border: none;
+        background-color: #868ea3;
+      }
+      .dark-gray {
+        color: #6a738c;
+        font-weight: bold;
+      }
+      .slot {
+        margin: 20px 0;
+      }
+      .slot-num {
+        color: black;
+        font-size: 50px;
+        text-align: left;
+        display: inline-block;
+        vertical-align: top;
+        margin-left: 30px;
+      }
+      .slot-divider {
+        display: inline-block;
+        background-color: black;
+        width: 750px;
+        margin: 50px;
+        position: absolute;
+        height: 3px;
+        border-radius: 1px;
+        -webkit-border-radius: 1px;
+        -moz-border-radius: 1px;
+      }
+      .story {
+        /*margin-left: 30px;*/
+        display: inline-block;
+        width: 800px;
+        text-align: center;
+        vertical-align: -30px;
+      }
+      .story-title {
+        color: #CA2222;
+        font-size: 24px;
+        font-weight: bold;
+        font-family: 'Open Sans', sans-serif;
+        margin: 10px 0;
+      }
+      .story-stats {
+        text-align: center;
+        font-size: 17px;
+        margin: 40px 0;
+      }
+      .story-stat {
+        margin: 15px 0;
+      }
+      .right-column {
+        display: inline-block;
+      }
+      .divider {
+        width: 1px;
+        height: 325px;
+        background-color: #868ea3;
+        display: inline-block;
+        margin: 0 20px;
+      }
+      .engagement {
+        display: inline-block;
+        text-align: center;
+        position: relative;
+        margin: 0 0 35px;
+        width: 585px;
+      }
+      .engage-top {
+        margin: 20px 0;
+      }
+      .engage-label {
+        font-family: 'Open Sans';
+        font-size: 30px;
+        font-weight: bold;
+        display: inline-block;
+        vertical-align: text-bottom;
+      }
+      .engage-stats {
+        vertical-align: top;
+        width: 100%;
+        margin-bottom: 30px;
+      }
+      .engage-score {
+        display: inline-block;
+        width: 50%;
+        font-size: 40px;
+        font-weight: bold;
+      }
+      .engage-metrics {
+        font-size: 18px;
+        margin-top: 5px;
+      }
+      .engage-metric {
+        display: inline-block;
+        margin: 0 25px;
+      }
+      .graph {
+        margin: 15px;
+      }
+      .graph-container {
+        width: 260px;
+        margin: 0 15px;
+        display: inline-block;
+        border: 1px solid rgb(223, 226, 236);
+        border-radius: 3px;
+        -webkit-border-radius: 3px;
+        -moz-border-radius: 3px;
+      }
+      .chart-header {
+        width: 100%;
+      }
+      .mp-graph {
+        height: 165px;
+        width: 260px;
+        background-color: rgb(251, 252, 253);
+        border-radius: 3px;
+        -webkit-border-radius: 3px;
+        -moz-border-radius: 3px;
+      }
+      .mp-graph .graph {
+        height: 165px;
+        width: 260px;
+        margin: 0;
+      }
+      .chart-header {
+        background-color: rgb(223, 226, 236);
+        position: relative;
+      }
+      .chart-title-shadow {
+        background-color: transparent;
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 1px;
+        z-index: 3;
+        box-shadow: 0 1px 2px 0 rgba(0,0,0,0.1);
+      }
+      .chart-title-container {
+        text-align: center;
+        padding: 8px 0;
+        z-index: 4;
+      }
+      .chart-title {
+        color: #747d94;
+        font-size: 13px;
+        font-weight: bold;
+      }
+      /*// Remove inner line chart border*/
+      .mp-graph > path, .mp-graph svg > path {
+        display: none
+      }
+      
+      /*// Remove outer line chart border*/
+      .mp-graph svg > rect:nth-of-type(2) {
+        stroke: rgb(223, 226, 236);
+        stroke-width: 0;
+      }
+      
+      /*// Set border radius for line chart y-axis to 0*/
+      .mp-graph svg > rect:nth-of-type(3) {
+        rx: 0;
+        ry: 0;
+        y: -3;
+        height: 173;
+      }
+
+    </style>
+  </head>
+  <body class="mixpanel-platform-body">
+    <div class="mixpanel-platform-section" id="all-slots"></div>
+    <script>
+    //////////////////////////// things to do/fix
+    // how to get only today? (only relevant hours)
+    // how to refresh every so often
+    // second page & high level metrics at top
+    // legends for graphs
+
+      // number of slots to show
+      var totalSlots = 5;
+      // number of days to analyze engagement predictions
+      // currently last 4 weeks
+      var predictedDays = 28;
+      
+      // cq scripts
+      var engagementScript, vsallScript, trafficScript, storyScript, timeScript;
+      $(document).ready(function() {
+        engagementScript = $.trim($('#engagement').html());
+        vsallScript = $.trim($('#vsall').html());
+        trafficScript = $.trim($('#referred-traffic').html());
+        storyScript = $.trim($('#current-story').html());
+        timeScript = $.trim($('#story-time').html());
+        
+        // loop through slots
+        for (var i = 1; i <= totalSlots; i++) {
+          addSlot(i);
+        }
+      });
+      // cq params
+      var engagementParams = {};
+      var vsallParams = {};
+      var trafficParams = {};
+      var storyParams = {};
+      var timeParams = {};
+      
+      // add slot info to report
+      function addSlot(num) {
+        $('<hr>').appendTo('#all-slots');
+        // add slot div with structure
+        $('<div id="slot' + num + '" class="slot">' + 
+        // '<div class="new-slot"><div class="slot-num">' + num + '</div><div class="slot-divider"></div></div>' +
+        '<div class="slot-num">' + num + '</div>' +
+        '<div class="story"><div class="story-title"></div></div>' + 
+        '<div class="engagement">' + 
+        '<div class="engage-top"><div class="engage-label">Engagement:</div></div>' +
+        '<div class="engage-stats"><div class="engage-metrics"></div></div>' + 
+        '<div class="engage-reports"></div>' + 
+        '</div>' + // engagement
+        '<div class="divider"></div>' +
+        '<div class="right-column"><div class="story-stats"></div><div class="traffic-report"></div></div>' +
+        '</div>')
+        .appendTo('#all-slots');
+        getCurrentStory(num);
+        getEngagementScore(num);
+        getTrafficBreakdown(num);
+      }
+      
+      function getCurrentStory(slot) {
+        storyParams[slot] = {
+          'slot': slot,
+          'from_date': date_to_string(moment().subtract(1, 'days')),
+          'to_date': date_to_string(moment()),
+        }
+        MP.api.custom_query(storyScript, storyParams[slot]).done(function(results) {
+          timeParams[slot] = {
+            'story': results[0].current_story,
+            'from_date': date_to_string(moment().subtract(1, 'days')),
+            'to_date': date_to_string(moment()),
+          }
+          MP.api.custom_query(timeScript, timeParams[slot]).done(function(timeResults) {
+            displayStory(slot, results, timeResults);
+          });
+        });
+      }
+      
+      function displayStory(slot, results, timeResults) {
+        var slotDiv = $('#slot' + slot);
+        var $storyDiv = slotDiv.find('.story-stats');
+        var $engageStatDiv = slotDiv.find('.engage-metrics');
+        slotDiv.find('.story-title').text(results[0].current_story);
+
+        $('<div class="story-stat">Time in Slot: <span class="dark-gray">' + results[0].time_in_slot + '</span></div>' + 
+        '<div class="story-stat">Time since Publish: <span class="dark-gray">' + timeResults[0] + '</span></div>').appendTo($storyDiv);
+        $('<div class="engage-metric"><span class="dark-gray">' + numberFormatCommas(results[0].stats['Story View']) + '</span> views</div>' + 
+        '<div class="engage-metric"><span class="dark-gray">' + numberFormatCommas(results[0].stats['Video Started']) + '</span> video starts</div>' + 
+        '<div class="engage-metric"><span class="dark-gray">' + numberFormatCommas(results[0].stats['Social Share']) + '</span> shares</div>').appendTo($engageStatDiv);
+      }
+      
+      function getEngagementScore(slot) {
+        engagementParams[slot] = {
+          1: {
+            'slot': slot,
+            'from_date': date_to_string(moment().subtract(predictedDays, 'days')),
+            'to_date': date_to_string(moment()),
+          },
+          2: {
+            'slot': slot,
+            'from_date': date_to_string(moment().subtract(1, 'days')),
+            'to_date': date_to_string(moment()),
+          }
+        }
+        vsallParams[slot] = {
+          'slot': slot,
+          'slot_max': totalSlots,
+          'from_date': date_to_string(moment().subtract(1, 'days')),
+          'to_date': date_to_string(moment()),
+        }
+        var promises = [];
+        var predicted = new Promise(function(resolve, reject) {
+          MP.api.custom_query(engagementScript, engagementParams[slot][1]).done(function(results) {
+            resolve(results);
+          });
+        });
+        var now = new Promise(function(resolve, reject) {
+          MP.api.custom_query(engagementScript, engagementParams[slot][2]).done(function(results) {
+            resolve(results);
+          });
+        });
+        var vsall = new Promise(function(resolve, reject) {
+          MP.api.custom_query(vsallScript, vsallParams[slot]).done(function(results) {
+            resolve(results);
+          });
+        });
+        promises.push(predicted, now, vsall);
+        Promise.all(promises).then(function(data) {
+          displayEngagement(slot, data);
+        });
+      }
+      
+      function displayEngagement(slot, data) {
+        var slotDiv = $('#slot' + slot);
+        var $engageScoreDiv = slotDiv.find('.engage-label');
+
+        // add engagement data to slot in report
+        var length = data[1].length-1;
+        var currentHour = Object.keys(data[0][length])[0];
+        var currentEngagement = data[1][length][currentHour];
+        $engageScoreDiv.text('Engagement: '+ numberFormatCommas(currentEngagement));
+        
+        var vsPredicted = numberFormatRound(data[1][length][currentHour] - data[0][length][currentHour]/predictedDays);
+
+        // format graph data
+        var graphObject = {
+          'Predicted': {},
+          'Actual': {},
+        }
+        _.each(data[0], function(object) {
+          var time = Object.keys(object)[0];
+          graphObject.Predicted[time] = numberFormatRound(object[time]/predictedDays);
+        });
+        _.each(data[1], function(object) {
+          var time = Object.keys(object)[0];
+          graphObject.Actual[time] = object[time];
+        });
+
+        // add graph to slot in report
+        addEngageChart('line', slot, 'engage-graph', vsPredicted, 'VS. PREDICTED', graphObject);
+
+        // add engagement vs all other slots
+        var slotText = 'Slot ' + slot;
+        var vsallGraphObject = {};
+        _.each(data[2], function(object) {
+          $.extend(true, vsallGraphObject, object);
+        });
+        
+        var vsallData = numberFormatRound(vsallGraphObject['Slot ' + slot][currentHour] - vsallGraphObject['All Others'][currentHour]);
+
+        // add engagement vs all other slots graph
+        addEngageChart('line', slot, 'vsall-graph', vsallData, 'VS. OTHER SLOTS', vsallGraphObject);
+      }
+      
+      function getTrafficBreakdown(slot) {
+        trafficParams[slot] = {
+          'slot': slot,
+          'from_date': date_to_string(moment().subtract(1, 'days')),
+          'to_date': date_to_string(moment()),
+        }
+        MP.api.custom_query(trafficScript, trafficParams[slot]).done(function(results) {
+          displayTraffic(slot, results);
+        });
+      }
+      
+      function displayTraffic(slot, data) {
+        var slotDiv = $('#slot' + slot);
+        var trafficObject = {};
+        _.each(data, function(object) {
+          $.extend(true, trafficObject, object);
+        });
+        addEngageChart('bar', slot, 'traffic-graph', '', 'FEED TRAFFIC VS. OTHER', trafficObject)
+      }
+      
+      function date_to_string(d) {
+        return d.toISOString().split('T')[0];
+      }
+      
+      function colorFormat(n) {
+        return n > 0 ? '#22ca76' : n < 0 ? '#ca2222' : 'black';
+      }
+      
+      function numberFormatRound(n) {
+        return Math.round(n);
+      }
+      function numberFormatCommas(n) {
+        var parts = n.toString().split(".");
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return parts.join(".");
+      }
+      
+      function addEngageChart(type, slot, div, number, title, data) {
+        var slotDiv = $('#slot' + slot);
+        var $parentGraphDiv = type == 'line' ? slotDiv.find('.engage-reports') : slotDiv.find('.traffic-report');
+        var highcharts = {
+            colors: ['#2276ca', '#ca2222'],
+            chart: {
+                marginBottom: 30,
+                borderWidth: 0,
+                borderRadius: 0,
+            },
+            xAxis: {
+                labels: {
+                    style: {
+                      'font-weight': 'bold',
+                    },
+                },
+            },
+            yAxis: {
+                gridLineColor: '#E6E8EB',
+                gridLineDashStyle: 'Dash',
+                gridLineWidth: 1,
+                labels: {
+                    style: {
+                      'font-weight': 'bold',
+                    },
+                },
+            },
+        }
+        
+        var params;
+        if (type == 'line') {
+          params = {
+            chartType: 'line',
+            highchartsOptions: highcharts,
+            data: data
+          }
+        } else if (type == 'bar') {
+          params = {
+            chartType: 'bar',
+            stacked: true,
+            highchartsOptions: highcharts,
+            data: data
+          }
+        }
+        
+        var $graphDiv = $('<div class="graph-container"></div>').appendTo($parentGraphDiv);
+        $('<div class="chart-header"><div class="chart-title-shadow"></div><div class="chart-title-container"><div class="chart-title"><span style="color: ' + colorFormat(number) + '">' + numberFormatCommas(number) + '</span> ' + title + '</div></div></div>').appendTo($graphDiv);
+        $('<div class="mp-graph ' + div + '"></div>').appendTo($graphDiv).MPChart(params);
+        $('.' + div + ' .mixpanel-platform-chart_header').hide();
+      }
+
+      
+    </script>
+    <script type="text/cq" id="engagement">
+        function convertTime(hour, change) {
+            if (hour < change) {
+                return 24 - change;
+            } else {
+                return hour - change;
+            }
+        }
+        var timezone = 5;
+        
+        function main() {
+            var object = {};
+            var currentHour = convertTime(new Date().getHours(), timezone); // convert utc to est timezone
+            var events = {
+                'Video Started': 5,
+                'Story View': 3,
+                'Page View': 2,
+                'Social Share': 1,
+            }
+            // Take all events in the given date range.
+            return Events({
+              from_date: params.from_date,
+              to_date: params.to_date,
+            })
+            .filter(function(event) {
+                return Object.keys(events).indexOf(event.name) > -1 && event.properties.Slot == params.slot;
+            })
+            .groupBy(
+                [
+                    function(event) { return new Date(event.time).getHours(); }
+                ],
+                function(accumulators, items) {
+                    var sum = 0;
+                    _.each(items, function(event) {
+                        sum += events[event.name];
+                    });
+                    _.each(accumulators, function(accum) {
+                        sum += accum;
+                    });
+                    return sum;
+                }
+            )
+            .filter(function(item) { return currentHour-4 <= item.key && item.key <= currentHour; })
+            .map(function(item) { 
+                var object = {}
+                var hour = item.key[0] % 12 || 12;
+                object[hour + ':00'] = item.value;
+                return object;
+            });
+        }
+    </script>
+    <script type="text/cq" id="vsall">
+        function convertTime(hour, change) {
+            if (hour < change) {
+                return 24 - change;
+            } else {
+                return hour - change;
+            }
+        }
+        var timezone = 5;
+        
+        function main() {
+            var object = {};
+            var currentHour = convertTime(new Date().getHours(), timezone); // convert utc to est timezone
+            var events = {
+                'Video Started': 5,
+                'Story View': 3,
+                'Page View': 2,
+                'Social Share': 1,
+            }
+            // Take all events in the given date range.
+            return Events({
+              from_date: params.from_date,
+              to_date: params.to_date,
+            })
+            .filter(function(event) {
+                return Object.keys(events).indexOf(event.name) > -1 && event.properties.Slot <= params.slot_max;
+            })
+            .groupBy(
+                [
+                    function(event) { return event.properties.Slot == params.slot; },
+                    function(event) { return new Date(event.time).getHours(); }
+                ],
+                function(accumulators, items) {
+                    var sum = 0;
+                    _.each(items, function(event) {
+                        sum += events[event.name];
+                    });
+                    _.each(accumulators, function(accum) {
+                        sum += accum;
+                    });
+                    return sum;
+                }
+            )
+            .filter(function(item) { return currentHour-4 <= item.key[1] && item.key[1] <= currentHour; })
+            .map(function(item) { 
+                var object = {};
+                var type = item.key[0] ? 'Slot ' + params.slot : 'All Others';
+                object[type] = {};
+                var hour = item.key[1] % 12 || 12;
+                object[type][hour + ':00'] = item.key[0] ? item.value : item.value/(params.slot_max-1);
+                return object;
+            });
+        }
+    </script>
+    <script type="text/cq" id="basic-traffic">
+        var sources = {
+            'Social': ['facebook', 'twitter', 'linkedin', 'pinterest',],
+            'Search': ['google', 'bing', 'yahoo',],
+            'Direct': ['direct'],
+            'Internal': ['espn']
+        }
+        function readSources(domain) {
+            var types = Object.keys(sources);
+            for (var i = 0, j = types.length; i < j; i++) {
+                for (var k = 0, l = sources[types[i]].length; k < l; k++) {
+                    if (domain.indexOf(sources[types[i]][k]) > -1) {
+                        return types[i];
+                    }
+                }
+            }
+            return 'Other';
+        }
+        function getTrafficSource(event) {
+            var url = event.properties.$initial_referrer; // use referring domain
+            var split = url.split('/'); // delete
+            if (split.length >= 3) { // delete
+                url = split[2] // delete
+            } else { // del
+                return 'Direct'; // del
+            } // del
+            if (!url) { return 'Direct'; }
+            var domainList = url.split('.');
+            if (domainList.length <= 1) { return readSources(url); }
+            var domain = domainList.slice(0, domainList.length-1).join('.');
+            return readSources(domain);
+        }
+        
+        function main() {
+            // Take all events in the given date range.
+            return Events({
+                from_date: params.from_date,
+                to_date: params.to_date,
+            })
+            .filter(function(event) { return event.name == 'Story View' && event.properties.Slot == params.slot; }) // use page view event
+            .groupBy(
+                [getTrafficSource],
+                mixpanel.reducer.count()
+            )
+        }
+    </script>
+    <script type="text/cq" id="referred-traffic">
+        function convertTime(hour, change) {
+            if (hour < change) {
+                return 24 - change;
+            } else {
+                return hour - change;
+            }
+        }
+        var timezone = 5;
+
+        function getTrafficSource(event) {
+            var url = event.properties.$initial_referrer;
+            var split = url.split('/');
+            if (split.length >= 3) {
+                url = split[2]
+            } else {
+                return 'Other';
+            }
+            if (!url) { return 'Other'; }
+            var espn = 'baidu'; // change to espn
+            if (url.indexOf(espn) > -1)  {
+                return 'Other';
+            }
+            return 'Referred';
+        }
+        function getStoryPlacement(event) {
+            var placement = event.properties["Event Placement"];
+            if (placement == 'Main Feed') { return 'Feed'; }
+            return 'All Other';
+        }
+        
+        function main() {
+            var currentHour = convertTime(new Date().getHours(), timezone); // convert utc to est timezone
+            // Take all events in the given date range.
+            return Events({
+                from_date: params.from_date,
+                to_date: params.to_date,
+            })
+            .filter(function(event) { return event.name == 'Story View' && event.properties.Slot == params.slot; }) // use page view
+            .groupBy(
+                [
+                    function(event) { return new Date(event.time).getHours(); },
+                    getStoryPlacement,
+                    getTrafficSource
+                ],
+                mixpanel.reducer.count()
+            )
+            .filter(function(item) { return currentHour-4 <= item.key[0] && item.key[0] <= currentHour; })
+            .map(function(item) { 
+                var object = {};
+                var type = item.key[1];
+                object[type] = {};
+                var hour = item.key[0] % 12 || 12;
+                object[type][hour + ':00'] = item.value;
+                return object;
+            });
+        }
+    </script>
+    <script type="text/cq" id="current-story">
+        function msToTime(duration) {
+            var milliseconds = parseInt((duration%1000)/100),
+                seconds = parseInt((duration/1000)%60),
+                minutes = parseInt((duration/(1000*60))%60),
+                hours = parseInt((duration/(1000*60*60))%24);
+        
+            hours = (hours < 10) ? "0" + hours : hours;
+            minutes = (minutes < 10) ? "0" + minutes : minutes;
+            seconds = (seconds < 10) ? "0" + seconds : seconds;
+        
+            return hours + ":" + minutes + ":" + seconds; // switch to just minutes
+        }
+        function main() {
+            var events = ['Video Started', 'Story View', 'Page View', 'Social Share',]
+            // Take all events in the given date range.
+            return Events({
+              from_date: params.from_date,
+              to_date: params.to_date,
+            })
+            .filter(function(event) {
+                return events.indexOf(event.name) > -1 && parseInt(event.properties.Slot) == params.slot;
+            })
+            .reduce(function(previous_outputs, events) {
+                var ret = {
+                    stories: {
+                        last_story_end: 0, 
+                        current_story_start: 0, 
+                        current_story_end: 0, 
+                        current_story: ''
+                    },
+                    stats: {
+                        'Story View': 0, // will be page view
+                        'Video Started': 0,
+                        'Social Share': 0
+                    }
+                };
+        
+                for (var i = 0; i < previous_outputs.length; i++){
+                    ret.stats['Story View'] += previous_outputs[i].stats['Story View'];
+                    ret.stats['Video Started'] += previous_outputs[i].stats['Video Started'];
+                    ret.stats['Social Share'] += previous_outputs[i].stats['Social Share'];
+                    
+                    if (ret.stories.current_story == previous_outputs[i].stories.current_story) {
+                        if (ret.stories.current_story_start > previous_outputs[i].stories.current_story_start && ret.stories.last_story_end < previous_outputs[i].stories.current_story_start) {
+                            ret.stories.current_story_start = previous_outputs[i].stories.current_story_start
+                        }
+                        if (ret.stories.current_story_end < previous_outputs[i].stories.current_story_end) {
+                            ret.stories.current_story_end = previous_outputs[i].stories.current_story_end
+                        }
+                        if (ret.stories.last_story_end < previous_outputs[i].stories.last_story_end) {
+                            ret.stories.last_story_end = previous_outputs[i].stories.last_story_end
+                        }
+                    } else {
+                        if (ret.stories.current_story_end < previous_outputs[i].stories.current_story_end) {
+                            ret.stories.current_story = previous_outputs[i].stories.current_story;
+                            if (ret.stories.current_story_end > previous_outputs[i].stories.last_story_end) {
+                                ret.stories.last_story_end = ret.stories.current_story_end;
+                            }
+                            ret.stories.current_story_end = previous_outputs[i].stories.current_story_end;
+                            if (ret.stories.current_story_start < ret.stories.last_story_end) {
+                                ret.stories.current_story_start = ret.stories.last_story_end;
+                            }
+                        } else if (ret.stories.last_story_end < previous_outputs[i].stories.current_story_end) {
+                            ret.stories.last_story_end = previous_outputs[i].stories.current_story_end;
+                            if (ret.stories.current_story_start < previous_outputs[i].stories.current_story_end) {
+                                ret.stories.current_story_start = previous_outputs[i].stories.current_story_end;
+                            }
+                        }
+                    }
+                }
+                for (var k = 0; k < events.length; k++) {
+                    var event = events[k];
+                    if (
+                        event.name == 'Story View' && 
+                        event.properties["Story Headline"] == ret.stories.current_story && 
+                        event.time > ret.stories.current_story_end
+                    ) {
+                        ret.stats['Story View'] ++;
+        
+                        ret.stories.current_story_end = event.time;
+                    } else if (event.name == 'Story View') {
+                        ret.stats['Story View'] ++;
+                        
+                        ret.stories.last_story_end = ret.stories.current_story_end;
+                        ret.stories.current_story_start = event.time;
+                        ret.stories.current_story_end = event.time;
+                        ret.stories.current_story = event.properties["Story Headline"];
+                    } else {
+                        ret.stats[event.name] ++;
+                    }
+                }
+                return ret;
+            })
+            .map(function(item) {
+                var timeDiff = item.stories.current_story_end - item.stories.current_story_start;
+                var result = {
+                    current_story: item.stories.current_story,
+                    time_in_slot: msToTime(timeDiff),
+                    stats: item.stats,
+                }
+                return result;
+            })
+        }
+    </script>
+    <script type="text/cq" id="story-time">
+        function msToTime(duration) {
+            var milliseconds = parseInt((duration%1000)/100)
+                , seconds = parseInt((duration/1000)%60)
+                , minutes = parseInt((duration/(1000*60))%60)
+                , hours = parseInt((duration/(1000*60*60))%24);
+        
+            hours = (hours < 10) ? "0" + hours : hours;
+            minutes = (minutes < 10) ? "0" + minutes : minutes;
+            seconds = (seconds < 10) ? "0" + seconds : seconds;
+        
+            return hours + ":" + minutes + ":" + seconds; // switch to just minutes
+        }
+        function main() {
+            // Take all events in the given date range.
+            return Events({
+              from_date: params.from_date,
+              to_date: params.to_date,
+            })
+            .filter(function(event) {
+                return event.name == 'Story View' && event.properties['Story Headline'] == params.story;
+            })
+            .reduce(function(previous_outputs, events) {
+                var result = 100000000000000000;
+                _.each(previous_outputs, function(output) {
+                    if (output < result) {
+                        result = output;
+                    }
+                });
+                _.each(events, function(e) {
+                    if (e.time < result) {
+                        result = e.time;
+                    }
+                });
+                return result;
+            })
+            .map(function(result) {
+                var now = Date.now();
+                return msToTime(now - result);
+            });
+        }
+    </script>
+  </body>
+</html>
