@@ -69,7 +69,17 @@ function populateSlots(results) {
   var engagements = results[1][0];
   var traffics = results[2][0];
   for (var i = 1; i <= totalSlots; i++) {
-    displayStory(i, stories[i]);
+    if (stories[i]) {
+      displayStory(i, stories[i]);
+    } else {
+      displayStory(i, {
+        slot_time_hr: 20,
+        slot_time_min: 48,
+        story: "Yu Darvish pitches in game for first time since 2015 surgery",
+        story_time_hr: 21,
+        story_time_min: 8
+      })
+    }
     displayEngagement(i, engagements[i]);
     displayBasicTraffic(i, traffics[i]);
   }
