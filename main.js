@@ -152,7 +152,7 @@ function addRow(tableDiv, data, header) {
 function getCurrentStory() {
   var storyParams = {
     'max_slots': totalSlots,
-    'from_date': date_to_string(moment()),
+    'from_date': date_to_string(moment().subtract(1, 'days')),
     'to_date': date_to_string(moment()),
   }
   return MP.api.jql(storyScript, storyParams);
