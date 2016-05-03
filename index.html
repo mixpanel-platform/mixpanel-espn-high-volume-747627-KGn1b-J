@@ -8,8 +8,8 @@
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
     <link rel="stylesheet" href="style.css">
-    <!--<script src="https://momentjs.com/downloads/moment.min.js"></script>-->
-    <!--<script src="https://momentjs.com/downloads/moment-timezone.min.js"></script>-->
+    <script src="http://momentjs.com/downloads/moment.min.js"></script>
+    <script src="http://momentjs.com/downloads/moment-timezone.min.js"></script>
     <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script>
     <script src="main.js"></script>
   </head>
@@ -64,7 +64,11 @@
                 if (timeInt <= timezone) timeInt += 24;
                 if (threeInt <= timezone) threeInt += 24;
                 if (nowInt <= timezone) nowInt += 24;
-                return Object.keys(events).indexOf(event.name) > -1 && event.properties.Slot && threeInt <= timeInt && timeInt <= nowInt;
+                return Object.keys(events).indexOf(event.name) > -1 && 
+                    event.properties.Slot && 
+                    event.properties.Slot <= 20 &&
+                    threeInt <= timeInt && 
+                    timeInt <= nowInt;
             })
             .map(function(event) {
                 var obj = {};
@@ -110,9 +114,9 @@
                         _.each(eventName, function(count, hour) {
                             total += count;
                             var hourInt = parseInt(hour.substr(0,1));
-                            if (hourInt == 1) {
+                            if (hourInt == nowHour) {
                                 eventName.now = count;
-                            } else if (hourInt == 12) {
+                            } else if (hourInt == lastHour) {
                                 eventName.last = count;
                             }
                         });
@@ -185,7 +189,8 @@
                 return event.name === 'Page View' && 
                   event.properties['Story Headline'] && 
                   event.properties['Referrer URL'] == 'http://espn.go.com/' &&
-                  event.properties['Referrer Placement Type'] == 'News Feed';
+                  event.properties['Referrer Placement Type'] == 'News Feed' &&
+                  event.properties['Referrer Slot'] <= 20;
             })
             .groupBy(['properties.Story\ Headline', 'properties.Referrer\ Slot'], function(outputs, events) {
                 var ret = ret || {
@@ -240,26 +245,30 @@
                     }
                 });
                 _.each(outputs, function(output) {
-                    _.each(output.slots, function(slot) {
-                        if (obj['slots'][slot]) {
-                            if (obj['slots'][slot].end < slot.end) {
-                                if (obj['slots'][slot].story === slot.story) {
-                                    obj['slots'][slot].end = slot.end;
-                                    if (obj['slots'][slot].start > slot.start) obj['slots'][slot].start = slot.start;
+                    _.each(output.slots, function(slot, slotNum) {
+                        if (obj['slots'][slotNum]) {
+                            if (obj['slots'][slotNum].end < slot.end) {
+                                if (obj['slots'][slotNum].story === slot.story) {
+                                    obj['slots'][slotNum].end = slot.end;
+                                    if (obj['slots'][slotNum].start > slot.start) obj['slots'][slotNum].start = slot.start;
                                 } else {
-                                    obj['slots'][slot] = slot;
+                                    obj['slots'][slotNum] = slot;
                                 }
                             } else {
-                                if (obj['slots'][slot].story === slot.story) {
-                                    if (obj['slots'][slot].start > slot.start) obj['slots'][slot].start = slot.start;
+                                if (obj['slots'][slotNum].story === slot.story) {
+                                    if (obj['slots'][slotNum].start > slot.start) obj['slots'][slotNum].start = slot.start;
                                 }
                             }
+                        } else {
+                          obj['slots'][slotNum] = slot;
                         }
                     });
-                    _.each(output.stories, function(story) {
-                        if (obj['stories'][story]) {
-                            if (obj['stories'][story].start > story.start) obj['stories'][story].start = story.start;
-                            if (obj['stories'][story].end < story.end) obj['stories'][story].end = story.end;
+                    _.each(output.stories, function(story, storyName) {
+                        if (obj['stories'][storyName]) {
+                            if (obj['stories'][storyName].start > story.start) obj['stories'][storyName].start = story.start;
+                            if (obj['stories'][storyName].end < story.end) obj['stories'][storyName].end = story.end;
+                        } else {
+                          obj['stories'][storyName] = story;
                         }
                     })
                 });
@@ -267,7 +276,7 @@
             })
             .map(function(item) {
                 var ret = {};
-                for (var i = 1; i <= params.max_slots; i++) {
+                for (var i = 1; i <= 20; i++) {
                     if (item.slots[i]) {
                         var story = item.slots[i].story;
                         var slotTime = msToTime(item.slots[i].end - item.slots[i].start);
