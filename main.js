@@ -71,23 +71,16 @@ function populateSlots(results) {
   for (var i = 1; i <= totalSlots; i++) {
     if (stories[i]) {
       displayStory(i, stories[i]);
-    } else {
-      displayStory(i, {
-        slot_time_hr: 20,
-        slot_time_min: 48,
-        story: "Yu Darvish pitches in game for first time since 2015 surgery",
-        story_time_hr: 21,
-        story_time_min: 8
-      })
     }
     displayEngagement(i, engagements[i]);
     displayBasicTraffic(i, traffics[i]);
   }
-  generateTables(engagements);
+  generateTables(engagements, stories);
   displayOverall(engagements);
 }
 
-function generateTables(data) {
+function generateTables(engagements, stories) {
+  console.log(stories);
   var $byView = $('#top-by-view');
   var $byShare = $('#top-by-share');
   var top = {
@@ -102,14 +95,17 @@ function generateTables(data) {
       })
     }
   });
-  $.each(data, function(slot) {
-    if (data[slot].Counts) {
-      $.each(data[slot].Counts, function(eventName, values) {
+  $.each(engagements, function(slot) {
+    if (engagements[slot].Counts) {
+      $.each(engagements[slot].Counts, function(eventName, values) {
         for (var i = 0; i < top[eventName].length; i++) {
           var obj = top[eventName][i];
           if (values.total > obj.total) {
+            console.log(slot);
+            console.log(i);
             top[eventName][i] = {
               slot: slot,
+              story: stories[slot].story,
               total: values.total,
               change: Math.round((values.now - values.last)/values.last*100)
             }
@@ -139,6 +135,7 @@ function displayTable(div, tableArray, event) {
   $tableDiv.empty();
   var headerData = {
     slot: 'Slot',
+    story: 'Story',
     total: 'Total ' + event,
     change: 'Change in Last Hour'
   }
@@ -155,6 +152,7 @@ function addRow(tableDiv, data, header) {
   var color = header ? '' : ' style="color: ' + colorFormat(data.change) + ';"';
   $('<div class="row ' + header + '">' + 
     '<div class="cell">' + data.slot + '</div>' + 
+    '<div class="cell">' + data.story + '</div>' + 
     '<div class="cell">' + data.total + '</div>' + 
     '<div class="cell"' + color + '>' + data.change + change + '</div>' + 
     '</div>').appendTo(tableDiv);
@@ -163,7 +161,7 @@ function addRow(tableDiv, data, header) {
 function getCurrentStory() {
   var storyParams = {
     'max_slots': totalSlots,
-    'from_date': date_to_string(_.now() - 1000*60*60*24),
+    'from_date': date_to_string(_.now()),
     'to_date': date_to_string(_.now()),
   }
   return MP.api.jql(storyScript, storyParams);
@@ -224,7 +222,7 @@ function displayEngagement(slot, results) {
   var $engageMetrics = $slotDiv.find('.engagement-stats');
   // reset engagement stats
   $engageMetrics.find('.engage-metric').remove();
-  $('<div class="engage-metric">' + '0' + '</div>').appendTo($engageMetrics.find('.views')); // use nFormatter(results.Counts['Page View'].total)
+  $('<div class="engage-metric">' + nFormatter(results.Counts['Page View'].total) + '</div>').appendTo($engageMetrics.find('.views'));
   $('<div class="engage-metric">' + nFormatter(results.Counts['Video Started'].total) + '</div>').appendTo($engageMetrics.find('.starts'));
   $('<div class="engage-metric">' + nFormatter(results.Counts['Social Share'].total) + '</div>').appendTo($engageMetrics.find('.shares'));
 
@@ -258,21 +256,11 @@ function displayBasicTraffic(slot, data) {
   var $sourceDiv = $slotDiv.find('.sources').empty();
   // add label
   $('<div class="chart-title">Traffic Sources</div>').appendTo($sourceDiv);
-  // add visualization
-  var colors = {
-    Direct: '#2276ca',
-    Social: '#838ca3',
-    Internal: '#ca2222',
-    Search: '#22caca',
-    Other: '#e5e7ee'
-  }
-  // calculate bar width ratios for each segment
-  var totalWidth = $sourceDiv.width() * .9;
+  // calculate total % breakdown
   var total = 0;
   _.each(data, function(count) {
     total += count;
   });
-  var ratio = totalWidth/total;
 
   // sort data
   var sortedData = [];
@@ -283,17 +271,12 @@ function displayBasicTraffic(slot, data) {
   })
 
   // add segments to slot
-  var $keys = $('<div class="keys"></div>').appendTo($sourceDiv);
   var $segments = $('<div class="segments"></div>').appendTo($sourceDiv);
   _.each(sortedData, function(source) {
     var label = source.label;
     var count = source.count;
-    $('<div class="key">' +
-      '<div class="key-color" style="background-color: ' + colors[label] + '"></div>' + 
-      '<div class="label key-label">' + label + '</div>' + 
-      '</div>').appendTo($keys);
-    $('<div class="traffic-segment" style="width: ' + count*ratio + 'px">' + 
-      '<div class="segment" style="background-color: ' + colors[label] + '"></div>' +
+    $('<div class="traffic-segment"><div class="label traffic-label">' + label + '</div>' + 
+      '<div class="value">' + (count/total*100).toFixed() + '%</div></div>' +
       '</div>').appendTo($segments);
   });
 }
