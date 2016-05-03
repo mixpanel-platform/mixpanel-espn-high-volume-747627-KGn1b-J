@@ -351,7 +351,7 @@ h1 {
     width: 100%;
   }
   .card {
-    width: 925px;
+    width: 921px;
     height: 321px;
     display: block;
     margin-left: auto;
@@ -397,7 +397,7 @@ h1 {
     font-size: 13px;
   }
   .row .cell {
-    width: 106px;
+    width: 96px;
   }
   .row .cell:nth-child(2) { /* story title cell */
     -webkit-line-clamp: 3;
