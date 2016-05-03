@@ -187,7 +187,7 @@ h1 {
   display: inline-block;
   vertical-align: -3px;
 }
-.label.key-label {
+.label.traffic-label {
   display: inline-block;
   font-size: 12px;
 }
@@ -196,11 +196,12 @@ h1 {
 }
 .traffic-segment {
   display: inline-block;
+  margin: 0 15px;
 }
-.segment {
-  width: 100%;
-  height: 20px;
+.value {
+  font-size: 22px;
 }
+
 
 /* graphs */
 .graph {
@@ -335,28 +336,87 @@ h1 {
   width: 125px;
   vertical-align: middle;
 }
+.row .cell:nth-child(2) { /* story title cell */
+  width: 350px;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .top-table .row:last-child {
   padding-bottom: 25px;
 }
 
 @media (max-width:1500px) {
-  #all-slots {
-    width: inherit;
+  #all-slots, #tables {
+    width: 100%;
   }
   .card {
-    width: 794px;
+    width: 925px;
+    height: 321px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
   }
+  .slot-num {
+    margin-left: 0;
+  }
+  .engage-reports {
+    display: inline-block;
+    float: right;
+    margin-right: 65px;
+  }
+  .sources {
+    width: inherit;
+    margin-top: 40px;
+    display: inline-block;
+  }
+  .story-stats {
+    width: inherit;
+    position: relative;
+    left: 10px;
+    display: inline-block;
+  }
+  .story-stat {
+    width: inherit;
+    margin: 0 40px;
+  }
+  .story-title {
+    float: left;
+    margin-left: 75px;
+  }
+  /* tables */
   .card.table-section {
     width: initial;
     display: inline-block;
+    height: 778px;
   }
+  .row {
+    font-size: 16px;
+  }
+  .row.header-row {
+    font-size: 13px;
+  }
+  .row .cell {
+    width: 106px;
+  }
+  .row .cell:nth-child(2) { /* story title cell */
+    -webkit-line-clamp: 3;
+    height: 41px;
+    width: 152px;
+    font-size: 13px;
+  }
+  .row.header-row .cell:nth-child(2) {
+    height: inherit;
+  }
+  #top-by-share {
+    float: right;
+  }
+  /* other */
+  #overall-engagement {
+    display: none;
+  }
+  
 }
-
-
-
-
-
-
 
 
 
