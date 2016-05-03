@@ -388,7 +388,7 @@ h1 {
   .card.table-section {
     width: initial;
     display: inline-block;
-    height: 778px;
+    height: 768px;
   }
   .row {
     font-size: 16px;
@@ -401,7 +401,7 @@ h1 {
   }
   .row .cell:nth-child(2) { /* story title cell */
     -webkit-line-clamp: 3;
-    height: 41px;
+    height: 40px;
     width: 152px;
     font-size: 13px;
   }
