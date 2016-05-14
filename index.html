@@ -1,3 +1,12 @@
+<!-- 
+
+This report has been custom-built for ESPN by Mixpanel's client solutions team, 
+and is not warranted or maintained alongside the core Mixpanel product. 
+As the end-user, you are solely responsible for any bug fixes, feature updates, 
+and ongoing code changes or iterations.
+
+-->
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -16,8 +25,16 @@
   <body>
     <div class="header">
       <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/2/2f/ESPN_wordmark.svg">
-      <h1>Content Slot Performance</h1>
-      <div class="current-time"></div>
+      <h1>Content Dashboard</h1>
+      <div class="label header-label">Powered By</div>
+      <img class="logo mixpanel" src="https://worldvectorlogo.com/logos/mixpanel.svg">
+    </div>
+    <div class="loading">Loading...</div>
+    <div class="inputs">
+        <div class="label dropdown-label">Filter by Platform:</div>
+        <div id="platform-dropdown"></div>
+        <div class="label dropdown-label">Filter by Edition:</div>
+        <div id="edition-dropdown"></div>
     </div>
     <div id="all-slots"></div>
     <div id="tables">
@@ -32,6 +49,11 @@
     </div>
 
     <script type="text/cq" id="engagement">
+        // This report has been custom-built for ESPN by Mixpanel's client solutions team, 
+        // and is not warranted or maintained alongside the core Mixpanel product. 
+        // As the end-user, you are solely responsible for any bug fixes, feature updates, 
+        // and ongoing code changes or iterations.
+
         var timezone = 4; // utc to et offset (should be 4 for EDT, 5 for EST)
         var now = _.now() - 1000*60*60*timezone;
         var nowHour = new Date(now).getHours() % 12 || 12;
@@ -43,6 +65,14 @@
         function dayDiff(d1, d2) {
             var oneDay = 1000*60*60*24;
             return Math.round(Math.abs(d1 - d2)/oneDay);
+        }
+
+        function getPlatform(deviceName) {
+            if (deviceName == undefined) {
+                return 'desktop';
+            } else {
+                return 'mobile';
+            }
         }
 
         function main() {
@@ -58,13 +88,20 @@
               to_date: params.to_date,
             })
             .filter(function(event) {
+                var editionFilter = false,
+                    platformFilter = false;
+                if (params.edition === 'all' || event.properties['Edition Name'] == params.edition) editionFilter = true;
+                if (params.platform === 'all' || getPlatform(event.properties['Device']) == params.platform) platformFilter = true;
+
                 var timeInt = new Date(event.time).getHours();
                 var threeInt = new Date(threeHoursAgo).getHours();
                 var nowInt = new Date(now).getHours();
                 if (timeInt <= timezone) timeInt += 24;
                 if (threeInt <= timezone) threeInt += 24;
                 if (nowInt <= timezone) nowInt += 24;
-                return Object.keys(events).indexOf(event.name) > -1 && 
+                return editionFilter &&
+                    platformFilter &&
+                    Object.keys(events).indexOf(event.name) > -1 && 
                     event.properties.Slot && 
                     event.properties.Slot <= 20 &&
                     threeInt <= timeInt && 
@@ -128,8 +165,13 @@
         }
     </script>
     <script type="text/cq" id="basic-traffic">
+        // This report has been custom-built for ESPN by Mixpanel's client solutions team, 
+        // and is not warranted or maintained alongside the core Mixpanel product. 
+        // As the end-user, you are solely responsible for any bug fixes, feature updates, 
+        // and ongoing code changes or iterations.
+
         var sources = {
-            'Social': ['facebook', 'twitter', 'linkedin', 'pinterest',],
+            'Social': ['facebook', 'twitter', 't.co', 'lnkd.in', 'linkedin', 'pinterest',],
             'Search': ['google', 'bing', 'yahoo',],
             'Direct': ['direct'],
             'Internal': ['espn']
@@ -146,18 +188,17 @@
             return 'Other';
         }
         function getTrafficSource(event) {
-            var url = event.properties.$initial_referrer; // use referring domain
-            var split = url.split('/'); // delete
-            if (split.length >= 3) { // delete
-                url = split[2] // delete
-            } else { // del
-                return 'Direct'; // del
-            } // del
+            var url = event.properties['Referrer URL'];
             if (!url) { return 'Direct'; }
-            var domainList = url.split('.');
-            if (domainList.length <= 1) { return readSources(url); }
-            var domain = domainList.slice(0, domainList.length-1).join('.');
-            return readSources(domain);
+            return readSources(url);
+        }
+
+        function getPlatform(deviceName) {
+            if (deviceName == undefined) {
+                return 'desktop';
+            } else {
+                return 'mobile';
+            }
         }
 
         function main() {
@@ -166,7 +207,17 @@
                 from_date: params.from_date,
                 to_date: params.to_date,
             })
-            .filter(function(event) { return event.name == 'Video Started' && event.properties.Slot && event.properties.Slot <= params.max_slots; }) // use page view event
+            .filter(function(event) { 
+                var editionFilter = false,
+                    platformFilter = false;
+                if (params.edition === 'all' || event.properties['Edition Name'] == params.edition) editionFilter = true;
+                if (params.platform === 'all' || getPlatform(event.properties['Device']) == params.platform) platformFilter = true;
+                return editionFilter && 
+                    platformFilter &&
+                    event.name == 'Page View' && 
+                    event.properties.Slot && 
+                    event.properties.Slot <= params.max_slots; 
+            })
             .map(function(event) {
                 var obj = {};
                 var slot = event.properties.Slot;
@@ -179,6 +230,11 @@
         }
     </script>
     <script type="text/cq" id="current-story">
+        // This report has been custom-built for ESPN by Mixpanel's client solutions team, 
+        // and is not warranted or maintained alongside the core Mixpanel product. 
+        // As the end-user, you are solely responsible for any bug fixes, feature updates, 
+        // and ongoing code changes or iterations.
+
         function main() {
             // Take all events in the given date range.
             return Events({
@@ -186,11 +242,17 @@
                 to_date: params.to_date,
             })
             .filter(function(event) {
-                return event.name === 'Page View' && 
-                  event.properties['Story Headline'] && 
-                  event.properties['Referrer URL'] == 'http://espn.go.com/' &&
-                  event.properties['Referrer Placement Type'] == 'News Feed' &&
-                  event.properties['Referrer Slot'] <= 20;
+                var editionFilter = false,
+                    platformFilter = false;
+                if (params.edition === 'all' || event.properties['Edition Name'] == params.edition) editionFilter = true;
+                if (params.platform === 'all' || getPlatform(event.properties['Device']) == params.platform) platformFilter = true;
+                return editionFilter && 
+                    platformFilter &&
+                    event.name === 'Page View' && 
+                    event.properties['Story Headline'] && 
+                    event.properties['Referrer URL'] == 'http://espn.go.com/' &&
+                    event.properties['Referrer Placement Type'] == 'News Feed' &&
+                    event.properties['Referrer Slot'] <= 20;
             })
             .groupBy(['properties.Story\ Headline', 'properties.Referrer\ Slot'], function(outputs, events) {
                 var ret = ret || {
@@ -291,6 +353,14 @@
                 }
                 return ret;
             })
+        }
+
+        function getPlatform(deviceName) {
+            if (deviceName == undefined) {
+                return 'desktop';
+            } else {
+                return 'mobile';
+            }
         }
 
         function msToTime(duration) {
