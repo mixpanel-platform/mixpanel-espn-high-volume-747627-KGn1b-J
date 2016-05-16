@@ -110,7 +110,7 @@ h1 {
   margin-right: 15px;
 }
 #platform-dropdown {
-  margin-right: 123px;
+  margin-right: 115px;
 }
 #edition-dropdown {
   margin-right: 0;
@@ -382,7 +382,7 @@ h1 {
 @media (max-width:1500px) {
   .inputs {
     display: block;
-    margin: 40px 20px 10px;
+    margin: 40px 10px 10px;
   }
   #all-slots, #tables {
     width: 100%;
