@@ -380,6 +380,16 @@ h1 {
 
 
 @media (max-width:1500px) {
+  .header {
+    margin: 10px;
+  }
+  .label.header-label {
+    top: 21px;
+    right: 196px;
+  }
+  .logo.mixpanel {
+    right: 20px;
+  }
   .inputs {
     display: block;
     margin: 40px 10px 10px;
@@ -473,6 +483,7 @@ h1 {
     width: initial;
     display: inline-block;
     height: 755px;
+    margin: 0 8px;
   }
   .table-section .chart-title {
     padding: 25px 0 22px;
